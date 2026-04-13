@@ -1,15 +1,9 @@
-import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { getSession } from "@/lib/auth";
 
 export default async function Home() {
-
-
-  const users = await prisma.user.findMany();
-
-  console.log({ users })
-
-  return (
-    <div>
-      <h1>Home</h1>
-    </div>
-  );
+  await connection();
+  const session = await getSession();
+  redirect(session ? "/dashboard" : "/login");
 }
