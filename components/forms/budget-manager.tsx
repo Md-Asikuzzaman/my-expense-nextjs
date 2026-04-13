@@ -81,7 +81,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
         return (
           <div
             key={budget.id}
-            className="flex items-center justify-between gap-2 rounded-lg border border-border/70 p-2"
+            className="flex flex-col gap-3 rounded-lg border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="text-sm font-medium">{budget.category}</p>
@@ -92,11 +92,11 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
               {isEditing ? (
                 <>
                   <Input
-                    className="h-8 w-28"
+                    className="h-9 w-full sm:w-28"
                     type="number"
                     step="0.01"
                     value={editedLimit}
@@ -104,6 +104,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
                   />
                   <Button
                     size="sm"
+                    className="flex-1 sm:flex-none"
                     onClick={() => saveEdit(budget)}
                     disabled={isPending}
                   >
@@ -112,6 +113,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="flex-1 sm:flex-none"
                     onClick={() => setEditingId(null)}
                   >
                     Cancel
@@ -122,6 +124,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="flex-1 sm:flex-none"
                     onClick={() => startEdit(budget)}
                   >
                     <Pencil className="size-3" />
@@ -129,6 +132,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
                   <Button
                     size="sm"
                     variant="destructive"
+                    className="flex-1 sm:flex-none"
                     onClick={() => removeBudget(budget.id)}
                     disabled={isPending}
                   >

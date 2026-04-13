@@ -108,7 +108,11 @@ export function FilterBar() {
             onChange={(e) => update("maxAmount", e.target.value)}
           />
 
-          <Button variant="outline" onClick={clear} className="h-10 sm:col-span-2 lg:col-span-3">
+          <Button
+            variant="outline"
+            onClick={clear}
+            className="h-10 sm:col-span-2 lg:col-span-3"
+          >
             Clear filters
           </Button>
         </div>
