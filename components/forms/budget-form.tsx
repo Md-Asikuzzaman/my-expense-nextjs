@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function BudgetForm({ month, year }: { month: number; year: number }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const form = useForm<BudgetFormInput, unknown, BudgetFormValues>({
     resolver: zodResolver(budgetFormSchema),
@@ -36,6 +38,7 @@ export function BudgetForm({ month, year }: { month: number; year: number }) {
         return;
       }
       toast.success("Budget saved.");
+      router.refresh();
     });
   });
 

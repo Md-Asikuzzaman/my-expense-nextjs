@@ -189,7 +189,16 @@ export async function upsertBudgetAction(input: {
   return { ok: true };
 }
 
-export async function exportCsvAction(
+export async function deleteBudgetAction(id: string) {
+  await requireAuth();
+
+  await prisma.budget.delete({ where: { id } });
+  updateTag("budgets");
+  updateTag("dashboard");
+  return { ok: true };
+}
+
+export async function exportPdfDataAction(
   rawFilters: Record<string, string | undefined>,
 ) {
   await requireAuth();
@@ -224,16 +233,12 @@ export async function exportCsvAction(
     orderBy: { date: "desc" },
   });
 
-  const headers = ["Title", "Amount", "Type", "Category", "Date"];
-  const rows = expenses.map((item) =>
-    [
-      item.title,
-      item.amount.toString(),
-      item.type,
-      item.category,
-      item.date.toISOString(),
-    ].join(","),
-  );
-
-  return [headers.join(","), ...rows].join("\n");
+  return expenses.map((item) => ({
+    id: item.id,
+    title: item.title,
+    amount: item.amount,
+    type: item.type,
+    category: item.category,
+    date: item.date.toISOString(),
+  }));
 }

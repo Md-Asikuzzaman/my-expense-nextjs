@@ -46,7 +46,7 @@ export function OverviewCards({
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-400/5">
+      <Card className="w-full bg-gradient-to-br from-emerald-500/10 to-emerald-400/5">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Total Income
@@ -61,7 +61,7 @@ export function OverviewCards({
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-rose-500/10 to-rose-400/5">
+      <Card className="w-full bg-gradient-to-br from-rose-500/10 to-rose-400/5">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Total Expense
@@ -76,7 +76,7 @@ export function OverviewCards({
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-indigo-500/10 to-violet-500/5">
+      <Card className="w-full sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-indigo-500/10 to-violet-500/5">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Savings

@@ -16,10 +16,11 @@ import { runRecurringAutomation } from "@/lib/recurring";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { ChartsSection } from "@/components/dashboard/charts-section";
 import { FilterBar } from "@/components/dashboard/filter-bar";
-import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { ExportPdfButton } from "@/components/dashboard/export-pdf-button";
 import { InsightsPanel } from "@/components/dashboard/insights-panel";
 import { BudgetProgress } from "@/components/dashboard/budget-progress";
 import { BudgetForm } from "@/components/forms/budget-form";
+import { BudgetManager } from "@/components/forms/budget-manager";
 import {
   Card,
   CardContent,
@@ -53,10 +54,11 @@ export default async function DashboardPage({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-2xl font-bold">Finance Command Center</h2>
-        <ExportCsvButton filters={plainFilters} />
+        <h2 className="text-xl font-bold sm:text-2xl">
+          Finance Command Center
+        </h2>
       </div>
 
       <FilterBar />
@@ -71,29 +73,18 @@ export default async function DashboardPage({
         <SummarySection />
       </Suspense>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Suspense
-          fallback={
-            <Card>
-              <CardContent>Loading analytics...</CardContent>
-            </Card>
-          }
-        >
-          <AnalyticsSection />
-        </Suspense>
-        <Suspense
-          fallback={
-            <Card>
-              <CardContent>Loading insights...</CardContent>
-            </Card>
-          }
-        >
-          <InsightsSection />
-        </Suspense>
-      </div>
+      <Suspense
+        fallback={
+          <Card className="w-full">
+            <CardContent>Loading insights...</CardContent>
+          </Card>
+        }
+      >
+        <InsightsSection />
+      </Suspense>
 
       <section className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card id="transactions">
+        <Card id="transactions" className="w-full">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
             <CardDescription>
@@ -105,7 +96,7 @@ export default async function DashboardPage({
               <Link
                 key={item.id}
                 href={`/transactions/${item.id}`}
-                className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-border/70 p-3 hover:bg-muted/50"
+                className="grid gap-3 rounded-xl border border-border/70 p-3 hover:bg-muted/50 sm:grid-cols-[1fr_auto_auto] sm:items-center"
               >
                 <div>
                   <p className="font-medium">{item.title}</p>
@@ -113,17 +104,21 @@ export default async function DashboardPage({
                     {formatDate(item.date)} • {item.category}
                   </p>
                 </div>
-                <Badge variant="outline">{item.type}</Badge>
-                <p
-                  className={
-                    item.type === "EXPENSE"
-                      ? "text-rose-600"
-                      : "text-emerald-600"
-                  }
-                >
-                  {item.type === "EXPENSE" ? "-" : "+"}
-                  {formatCurrency(item.amount)}
-                </p>
+                <div className="flex items-center justify-between gap-2 sm:contents">
+                  <Badge variant="outline" className="w-fit">
+                    {item.type}
+                  </Badge>
+                  <p
+                    className={
+                      item.type === "EXPENSE"
+                        ? "text-right text-rose-600"
+                        : "text-right text-emerald-600"
+                    }
+                  >
+                    {item.type === "EXPENSE" ? "-" : "+"}
+                    {formatCurrency(item.amount)}
+                  </p>
+                </div>
               </Link>
             ))}
           </CardContent>
@@ -137,6 +132,22 @@ export default async function DashboardPage({
           }
         >
           <BudgetSection month={month} year={year} />
+        </Suspense>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+          <h3 className="text-lg font-semibold">Analytics & Reports</h3>
+          <ExportPdfButton filters={plainFilters} />
+        </div>
+        <Suspense
+          fallback={
+            <Card>
+              <CardContent>Loading analytics...</CardContent>
+            </Card>
+          }
+        >
+          <AnalyticsSection />
         </Suspense>
       </section>
     </div>
@@ -191,6 +202,9 @@ async function BudgetSection({ month, year }: { month: number; year: number }) {
         </CardHeader>
         <CardContent>
           <BudgetForm month={month} year={year} />
+          <div className="mt-4 border-t border-border/70 pt-4">
+            <BudgetManager budgets={budgets} />
+          </div>
         </CardContent>
       </Card>
     </div>

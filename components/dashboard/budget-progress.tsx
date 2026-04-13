@@ -18,7 +18,7 @@ export function BudgetProgress({
   spentByCategory: Record<string, number>;
 }) {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Budget Progress</CardTitle>
       </CardHeader>
@@ -36,7 +36,7 @@ export function BudgetProgress({
 
           return (
             <div key={budget.category} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <span>{budget.category}</span>
                 <span>
                   {formatCurrency(spent)} / {formatCurrency(budget.limit)}

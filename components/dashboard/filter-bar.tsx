@@ -53,20 +53,22 @@ export function FilterBar() {
       </div>
 
       {!isCollapsed && (
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Input
             type="date"
+            className="h-10"
             value={values.startDate}
             onChange={(e) => update("startDate", e.target.value)}
           />
           <Input
             type="date"
+            className="h-10"
             value={values.endDate}
             onChange={(e) => update("endDate", e.target.value)}
           />
 
           <select
-            className="h-9 rounded-lg border border-input bg-background px-3"
+            className="h-10 w-full rounded-lg border border-input bg-background px-3"
             value={values.category}
             onChange={(e) => update("category", e.target.value)}
           >
@@ -79,7 +81,7 @@ export function FilterBar() {
           </select>
 
           <select
-            className="h-9 rounded-lg border border-input bg-background px-3"
+            className="h-10 w-full rounded-lg border border-input bg-background px-3"
             value={values.type}
             onChange={(e) => update("type", e.target.value)}
           >
@@ -93,18 +95,20 @@ export function FilterBar() {
 
           <Input
             type="number"
+            className="h-10"
             placeholder="Min amount"
             value={values.minAmount}
             onChange={(e) => update("minAmount", e.target.value)}
           />
           <Input
             type="number"
+            className="h-10"
             placeholder="Max amount"
             value={values.maxAmount}
             onChange={(e) => update("maxAmount", e.target.value)}
           />
 
-          <Button variant="outline" onClick={clear} className="md:col-span-3">
+          <Button variant="outline" onClick={clear} className="h-10 sm:col-span-2 lg:col-span-3">
             Clear filters
           </Button>
         </div>
