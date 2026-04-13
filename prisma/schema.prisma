@@ -1,0 +1,32 @@
+// Prisma Schema for Antigravity Expense Tracker
+// Optimized for MongoDB with indexed date field
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Transaction {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  amount    Float
+  date      DateTime
+  type      TransactionType
+  category  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([date])
+  @@index([type])
+  @@map("transactions")
+}
