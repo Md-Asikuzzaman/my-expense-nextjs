@@ -1,21 +1,30 @@
-"use client";
+'use client';
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, Controller } from 'react-hook-form';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
-import { upsertBudgetAction } from "@/app/actions";
-import { EXPENSE_CATEGORIES } from "@/lib/constants";
+import { upsertBudgetAction } from '@/app/actions';
+import { EXPENSE_CATEGORIES } from '@/lib/constants';
 import {
   BudgetFormInput,
   BudgetFormValues,
   budgetFormSchema,
-} from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export function BudgetForm({ month, year }: { month: number; year: number }) {
   const router = useRouter();
@@ -23,12 +32,14 @@ export function BudgetForm({ month, year }: { month: number; year: number }) {
   const form = useForm<BudgetFormInput, unknown, BudgetFormValues>({
     resolver: zodResolver(budgetFormSchema),
     defaultValues: {
-      category: "Food",
+      category: 'Food',
       limit: 0,
       month,
       year,
     },
   });
+
+  const errors = form.formState.errors;
 
   const onSubmit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -37,46 +48,81 @@ export function BudgetForm({ month, year }: { month: number; year: number }) {
         toast.error(result.message);
         return;
       }
-      toast.success("Budget saved.");
+      toast.success('Budget saved.');
+      form.reset({
+        category: 'Food',
+        limit: 0,
+        month,
+        year,
+      });
       router.refresh();
     });
   });
 
   return (
-    <form onSubmit={onSubmit} className="grid grid-cols-4 gap-2">
-      <div className="col-span-2 grid gap-2">
-        <Label htmlFor="budget-category">Category</Label>
-        <select
-          id="budget-category"
-          className="h-9 rounded-lg border border-input bg-background px-3"
-          {...form.register("category")}
-        >
-          {EXPENSE_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="col-span-2 grid gap-2">
-        <Label htmlFor="budget-limit">Limit</Label>
-        <Input
-          id="budget-limit"
-          type="number"
-          step="0.01"
-          {...form.register("limit")}
+    <form onSubmit={onSubmit} className='grid gap-4'>
+      {/* Category & Amount */}
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <Controller
+          name='category'
+          control={form.control}
+          render={({ field }) => (
+            <div className='grid gap-2'>
+              <Label>Category</Label>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className='h-11 sm:h-10 w-full'>
+                  <SelectValue placeholder='Select category' />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         />
+
+        <div className='grid gap-2'>
+          <Label htmlFor='budget-limit'>Budget Limit</Label>
+          <Input
+            id='budget-limit'
+            type='number'
+            step='0.01'
+            inputMode='decimal'
+            placeholder='0.00'
+            className={cn(
+              'h-11 sm:h-10',
+              errors.limit &&
+                'border-destructive focus-visible:ring-destructive',
+            )}
+            {...form.register('limit', { valueAsNumber: true })}
+          />
+          {errors.limit && (
+            <p className='text-xs text-destructive'>{errors.limit.message}</p>
+          )}
+        </div>
       </div>
 
-      <input type="hidden" {...form.register("month")} />
-      <input type="hidden" {...form.register("year")} />
+      <input type='hidden' {...form.register('month')} />
+      <input type='hidden' {...form.register('year')} />
 
-      <div className="col-span-4">
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Saving..." : "Set Budget"}
+      {/* Submit Button */}
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        className='pt-2'
+      >
+        <Button
+          type='submit'
+          disabled={isPending}
+          className='w-full h-11 sm:h-10'
+        >
+          {isPending ? 'Saving...' : 'Set Budget'}
         </Button>
-      </div>
+      </motion.div>
     </form>
   );
 }

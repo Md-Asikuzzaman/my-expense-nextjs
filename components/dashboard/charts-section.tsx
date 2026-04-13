@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import { motion } from 'framer-motion';
 import {
   Bar,
   BarChart,
@@ -12,7 +13,7 @@ import {
   Cell,
   CartesianGrid,
   Legend,
-} from "recharts";
+} from 'recharts';
 
 import {
   Card,
@@ -20,37 +21,9 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
-const COLORS = ["#6366f1", "#8b5cf6", "#10b981", "#f43f5e", "#f59e0b"];
-
-type WaveBarProps = {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  fill?: string;
-};
-
-function WaveBar({
-  x = 0,
-  y = 0,
-  width = 0,
-  height = 0,
-  fill = "#6366f1",
-}: WaveBarProps) {
-  const wave = Math.min(8, Math.max(2, height * 0.2));
-  const path = [
-    `M ${x} ${y + height}`,
-    `L ${x} ${y + wave}`,
-    `Q ${x + width * 0.25} ${y - wave} ${x + width * 0.5} ${y + wave}`,
-    `Q ${x + width * 0.75} ${y + wave * 2} ${x + width} ${y + wave}`,
-    `L ${x + width} ${y + height}`,
-    "Z",
-  ].join(" ");
-
-  return <path d={path} fill={fill} opacity={0.9} />;
-}
+const COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f43f5e', '#f59e0b'];
 
 type CategoryTotal = { category: string; value: number };
 type TrendRow = Record<string, string | number>;
@@ -63,65 +36,139 @@ export function ChartsSection({
   monthlyCategoryTrend: TrendRow[];
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Expense Distribution</CardTitle>
-          <CardDescription>Pie chart by category</CardDescription>
-        </CardHeader>
-        <CardContent className="h-64 sm:h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={categoryTotals}
-                dataKey="value"
-                nameKey="category"
-                outerRadius={100}
-              >
-                {categoryTotals.map((entry, index) => (
-                  <Cell
-                    key={entry.category}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+    <div className='grid gap-4 lg:grid-cols-2'>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <Card className='w-full overflow-hidden'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-base sm:text-lg'>
+              Expense Distribution
+            </CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
+              Breakdown by category
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='h-56 sm:h-64 lg:h-72'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <PieChart>
+                <Pie
+                  data={categoryTotals}
+                  dataKey='value'
+                  nameKey='category'
+                  outerRadius='80%'
+                  cx='50%'
+                  cy='50%'
+                  label={({ percent }) =>
+                    typeof percent === 'number' && percent > 0.05
+                      ? `${(percent * 100).toFixed(0)}%`
+                      : ''
+                  }
+                  labelLine={false}
+                >
+                  {categoryTotals.map((entry, index) => (
+                    <Cell
+                      key={entry.category}
+                      fill={COLORS[index % COLORS.length]}
+                      strokeWidth={0}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => [
+                    `$${Number(value).toFixed(2)}`,
+                    'Amount',
+                  ]}
+                  contentStyle={{
+                    borderRadius: '12px',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  }}
+                />
+                <Legend
+                  verticalAlign='bottom'
+                  height={36}
+                  iconType='circle'
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '16px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Monthly Category Trends</CardTitle>
-          <CardDescription>Bar wave chart over recent months</CardDescription>
-        </CardHeader>
-        <CardContent className="h-64 sm:h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyCategoryTrend}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(99,102,241,0.15)"
-              />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {Object.keys(monthlyCategoryTrend[0] ?? {})
-                .filter((key) => key !== "month")
-                .map((key, index) => (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    fill={COLORS[index % COLORS.length]}
-                    shape={<WaveBar />}
-                  />
-                ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <Card className='w-full overflow-hidden'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-base sm:text-lg'>
+              Monthly Trends
+            </CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
+              Spending over recent months
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='h-56 sm:h-64 lg:h-72'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <BarChart
+                data={monthlyCategoryTrend}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray='3 3'
+                  stroke='rgba(99,102,241,0.08)'
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey='month'
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  dy={8}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `$${value}`}
+                  width={50}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: '12px',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  }}
+                  formatter={(value) => [`$${Number(value).toFixed(2)}`, '']}
+                />
+                <Legend
+                  verticalAlign='top'
+                  height={20}
+                  iconType='circle'
+                  wrapperStyle={{ fontSize: '11px', paddingBottom: '8px' }}
+                />
+                {Object.keys(monthlyCategoryTrend[0] ?? {})
+                  .filter((key) => key !== 'month')
+                  .slice(0, 4) // Limit to 4 categories for mobile readability
+                  .map((key, index) => (
+                    <Bar
+                      key={key}
+                      dataKey={key}
+                      fill={COLORS[index % COLORS.length]}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={40}
+                    />
+                  ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

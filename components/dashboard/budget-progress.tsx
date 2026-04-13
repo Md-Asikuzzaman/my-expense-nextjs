@@ -1,9 +1,19 @@
-import { AlertTriangle } from "lucide-react";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
+import { AlertTriangle, Target, Wallet } from 'lucide-react';
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { formatCurrency } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import { staggerItemVariants } from '@/lib/animations';
 
 type BudgetItem = {
   category: string;
@@ -18,47 +28,92 @@ export function BudgetProgress({
   spentByCategory: Record<string, number>;
 }) {
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Budget Progress</CardTitle>
+    <Card className='w-full overflow-hidden'>
+      <CardHeader className='pb-3'>
+        <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
+          <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/30'>
+            <Target className='size-4 text-violet-500' />
+          </div>
+          Budget Progress
+        </CardTitle>
+        <CardDescription className='text-xs sm:text-sm'>
+          Track your monthly spending limits
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {budgets.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No budget set for this month yet.
-          </p>
-        )}
+      <CardContent className='space-y-4 sm:space-y-5'>
+        {budgets.length === 0 ? (
+          <div className='flex flex-col items-center justify-center py-8 text-center'>
+            <Wallet className='size-8 text-muted-foreground/50 mb-2' />
+            <p className='text-sm text-muted-foreground'>
+              No budgets set for this month
+            </p>
+            <p className='text-xs text-muted-foreground mt-1'>
+              Add budgets to track your spending limits
+            </p>
+          </div>
+        ) : (
+          <motion.div initial='initial' animate='animate' className='space-y-4'>
+            {budgets.map((budget, index) => {
+              const spent = spentByCategory[budget.category] ?? 0;
+              const pct = Math.min((spent / budget.limit) * 100, 100);
+              const alert = pct >= 100 ? 'danger' : pct >= 80 ? 'warn' : 'safe';
+              const remaining = budget.limit - spent;
 
-        {budgets.map((budget) => {
-          const spent = spentByCategory[budget.category] ?? 0;
-          const pct = Math.min((spent / budget.limit) * 100, 100);
-          const alert = pct >= 100 ? "danger" : pct >= 80 ? "warn" : "safe";
-
-          return (
-            <div key={budget.category} className="space-y-1">
-              <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <span>{budget.category}</span>
-                <span>
-                  {formatCurrency(spent)} / {formatCurrency(budget.limit)}
-                </span>
-              </div>
-              <Progress value={pct} className="h-2" />
-              {alert !== "safe" && (
-                <p
-                  className={cn(
-                    "flex items-center gap-1 text-xs",
-                    alert === "danger" ? "text-rose-600" : "text-amber-600",
-                  )}
+              return (
+                <motion.div
+                  key={budget.category}
+                  variants={staggerItemVariants}
+                  custom={index}
+                  className='space-y-2'
                 >
-                  <AlertTriangle className="size-3" />
-                  {alert === "danger"
-                    ? "Budget limit reached"
-                    : "Budget is above 80%"}
-                </p>
-              )}
-            </div>
-          );
-        })}
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='text-sm font-medium'>
+                      {budget.category}
+                    </span>
+                    <span className='text-xs sm:text-sm text-muted-foreground'>
+                      {formatCurrency(spent)} / {formatCurrency(budget.limit)}
+                    </span>
+                  </div>
+                  <div className='relative'>
+                    <Progress
+                      value={pct}
+                      className={cn(
+                        'h-2.5 sm:h-3',
+                        alert === 'danger' && '[&>div]:bg-rose-500',
+                        alert === 'warn' && '[&>div]:bg-amber-500',
+                        alert === 'safe' && '[&>div]:bg-emerald-500',
+                      )}
+                    />
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    {alert !== 'safe' ? (
+                      <p
+                        className={cn(
+                          'flex items-center gap-1 text-xs font-medium',
+                          alert === 'danger'
+                            ? 'text-rose-600'
+                            : 'text-amber-600',
+                        )}
+                      >
+                        <AlertTriangle className='size-3' />
+                        {alert === 'danger'
+                          ? 'Budget limit reached'
+                          : 'Approaching limit'}
+                      </p>
+                    ) : (
+                      <p className='text-xs text-emerald-600 font-medium'>
+                        {formatCurrency(remaining)} remaining
+                      </p>
+                    )}
+                    <span className='text-xs text-muted-foreground'>
+                      {pct.toFixed(0)}%
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
       </CardContent>
     </Card>
   );

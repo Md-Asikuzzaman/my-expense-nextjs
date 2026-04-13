@@ -1,15 +1,18 @@
-"use client";
+'use client';
 
-import { useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { Mail, Lock } from 'lucide-react';
 
-import { loginAction } from "@/app/actions";
-import { loginSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { loginAction } from '@/app/actions';
+import { loginSchema } from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 type LoginValues = {
   email: string;
@@ -21,10 +24,12 @@ export function LoginForm() {
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
+
+  const errors = form.formState.errors;
 
   const onSubmit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -36,18 +41,70 @@ export function LoginForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-3">
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" {...form.register("email")} />
+    <motion.form
+      onSubmit={onSubmit}
+      className='grid gap-5'
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Email */}
+      <div className='grid gap-2'>
+        <Label htmlFor='email'>Email</Label>
+        <div className='relative'>
+          <Mail className='absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground' />
+          <Input
+            id='email'
+            type='email'
+            inputMode='email'
+            autoComplete='email'
+            placeholder='Enter your email'
+            className={cn(
+              'h-12 sm:h-11 pl-10',
+              errors.email &&
+                'border-destructive focus-visible:ring-destructive',
+            )}
+            {...form.register('email')}
+          />
+        </div>
+        {errors.email && (
+          <p className='text-xs text-destructive'>{errors.email.message}</p>
+        )}
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" {...form.register("password")} />
+
+      {/* Password */}
+      <div className='grid gap-2'>
+        <Label htmlFor='password'>Password</Label>
+        <div className='relative'>
+          <Lock className='absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground' />
+          <Input
+            id='password'
+            type='password'
+            autoComplete='current-password'
+            placeholder='Enter your password'
+            className={cn(
+              'h-12 sm:h-11 pl-10',
+              errors.password &&
+                'border-destructive focus-visible:ring-destructive',
+            )}
+            {...form.register('password')}
+          />
+        </div>
+        {errors.password && (
+          <p className='text-xs text-destructive'>{errors.password.message}</p>
+        )}
       </div>
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Signing in..." : "Sign in"}
-      </Button>
-    </form>
+
+      {/* Submit Button */}
+      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+        <Button
+          type='submit'
+          disabled={isPending}
+          className='h-12 sm:h-11 w-full text-base sm:text-sm'
+        >
+          {isPending ? 'Signing in...' : 'Sign in'}
+        </Button>
+      </motion.div>
+    </motion.form>
   );
 }
