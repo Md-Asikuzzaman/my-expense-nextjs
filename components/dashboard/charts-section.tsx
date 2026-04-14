@@ -134,7 +134,11 @@ export function ChartsSection({
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
                       style={{
-                        backgroundColor: resolveColor(key, index, categoryColors),
+                        backgroundColor: resolveColor(
+                          key,
+                          index,
+                          categoryColors,
+                        ),
                       }}
                     />
                     <span className="text-muted-foreground">{key}</span>
