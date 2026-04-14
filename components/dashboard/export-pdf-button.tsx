@@ -21,7 +21,7 @@ export function ExportPdfButton({
 
       const doc = new jsPDF();
       doc.setFontSize(16);
-      doc.text("PulseLedger - Expense Report", 14, 16);
+      doc.text("Ninja-Expense - Expense Report", 14, 16);
 
       autoTable(doc, {
         startY: 24,

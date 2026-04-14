@@ -11,7 +11,10 @@ import {
 import { cacheLife, cacheTag } from "next/cache";
 
 import prisma from "@/lib/prisma";
-import { EXPENSE_CATEGORIES } from "@/lib/constants";
+import {
+  DEFAULT_CATEGORY_SEEDS,
+  getFallbackCategoryColor,
+} from "@/lib/categories";
 import { ParsedFilters } from "@/lib/filters";
 
 function sanitizeDate(date?: Date) {
@@ -28,7 +31,70 @@ function growthPercentage(current: number, previous: number) {
   return ((current - previous) / previous) * 100;
 }
 
-export async function getDashboardSummary() {
+function buildExpenseWhere(filters: ParsedFilters = {}) {
+  const where: {
+    date?: { gte?: Date; lte?: Date };
+    category?: string;
+    type?: "INCOME" | "EXPENSE";
+    amount?: { gte?: number; lte?: number };
+  } = {};
+
+  const start = sanitizeDate(filters.startDate);
+  const end = sanitizeDate(filters.endDate);
+
+  if (start || end) {
+    where.date = {
+      ...(start ? { gte: start } : {}),
+      ...(end ? { lte: end } : {}),
+    };
+  }
+
+  if (filters.category) where.category = filters.category;
+  if (filters.type) where.type = filters.type;
+  if (filters.minAmount || filters.maxAmount) {
+    where.amount = {
+      ...(typeof filters.minAmount === "number"
+        ? { gte: filters.minAmount }
+        : {}),
+      ...(typeof filters.maxAmount === "number"
+        ? { lte: filters.maxAmount }
+        : {}),
+    };
+  }
+
+  return where;
+}
+
+export function hasActiveFilters(filters: ParsedFilters = {}) {
+  return Boolean(
+    filters.startDate ||
+    filters.endDate ||
+    filters.category ||
+    filters.type ||
+    typeof filters.minAmount === "number" ||
+    typeof filters.maxAmount === "number",
+  );
+}
+
+async function ensureDefaultCategories() {
+  const count = await prisma.category.count();
+  if (count > 0) {
+    return;
+  }
+
+  for (const item of DEFAULT_CATEGORY_SEEDS) {
+    await prisma.category.upsert({
+      where: { name: item.name },
+      create: {
+        name: item.name,
+        color: item.color,
+      },
+      update: {},
+    });
+  }
+}
+
+async function getDefaultDashboardSummary() {
   "use cache";
   cacheLife("minutes");
   cacheTag("dashboard");
@@ -74,6 +140,65 @@ export async function getDashboardSummary() {
   };
 }
 
+export async function getCategories() {
+  "use cache";
+  cacheLife("days");
+  cacheTag("categories");
+
+  await ensureDefaultCategories();
+
+  return prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getCategoriesWithUsage() {
+  const categories = await getCategories();
+  const usage = await Promise.all(
+    categories.map(async (category) => {
+      const [expenseCount, budgetCount] = await Promise.all([
+        prisma.expense.count({ where: { category: category.name } }),
+        prisma.budget.count({ where: { category: category.name } }),
+      ]);
+      return {
+        ...category,
+        expenseCount,
+        budgetCount,
+      };
+    }),
+  );
+
+  return usage;
+}
+
+export async function getDashboardSummary(filters?: ParsedFilters) {
+  const activeFilters = hasActiveFilters(filters);
+
+  if (activeFilters) {
+    const filtered = await prisma.expense.findMany({
+      where: buildExpenseWhere(filters),
+    });
+
+    const currentIncome = filtered
+      .filter((item) => item.type === "INCOME")
+      .reduce((sum, item) => sum + item.amount, 0);
+    const currentExpense = filtered
+      .filter((item) => item.type === "EXPENSE")
+      .reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      currentIncome,
+      currentExpense,
+      savings: currentIncome - currentExpense,
+      incomeGrowth: 0,
+      expenseGrowth: 0,
+      savingsGrowth: 0,
+    };
+  }
+
+  return getDefaultDashboardSummary();
+}
+
 export async function getAnalytics() {
   "use cache";
   cacheLife("minutes");
@@ -85,6 +210,9 @@ export async function getAnalytics() {
     end: startOfMonth(now),
   });
 
+  const categories = await getCategories();
+  const categoryNames = categories.map((item) => item.name);
+
   const records = await prisma.expense.findMany({
     where: {
       type: "EXPENSE",
@@ -95,7 +223,7 @@ export async function getAnalytics() {
     },
   });
 
-  const categoryTotals = EXPENSE_CATEGORIES.map((category) => ({
+  const categoryTotals = categoryNames.map((category) => ({
     category,
     value: records
       .filter((item) => item.category === category)
@@ -111,7 +239,7 @@ export async function getAnalytics() {
       (item) => item.date >= start && item.date <= end,
     );
 
-    return EXPENSE_CATEGORIES.reduce(
+    return categoryNames.reduce(
       (acc, category) => {
         const total = monthRecords
           .filter((item) => item.category === category)
@@ -124,9 +252,17 @@ export async function getAnalytics() {
 
   const sorted = [...categoryTotals].sort((a, b) => b.value - a.value);
 
+  const categoryColors = Object.fromEntries(
+    categories.map((category, index) => [
+      category.name,
+      category.color || getFallbackCategoryColor(index),
+    ]),
+  );
+
   return {
     categoryTotals,
     monthlyCategoryTrend,
+    categoryColors,
     topCategory: sorted.find((item) => item.value > 0)?.category ?? "None",
     leastCategory:
       [...sorted].reverse().find((item) => item.value > 0)?.category ?? "None",
@@ -164,39 +300,9 @@ export async function getMonthlyExpenseByCategory(month: number, year: number) {
 }
 
 export async function getExpenses(filters: ParsedFilters = {}) {
-  const where: {
-    date?: { gte?: Date; lte?: Date };
-    category?: string;
-    type?: "INCOME" | "EXPENSE";
-    amount?: { gte?: number; lte?: number };
-  } = {};
-
-  const start = sanitizeDate(filters.startDate);
-  const end = sanitizeDate(filters.endDate);
-
-  if (start || end) {
-    where.date = {
-      ...(start ? { gte: start } : {}),
-      ...(end ? { lte: end } : {}),
-    };
-  }
-
-  if (filters.category) where.category = filters.category;
-  if (filters.type) where.type = filters.type;
-  if (filters.minAmount || filters.maxAmount) {
-    where.amount = {
-      ...(typeof filters.minAmount === "number"
-        ? { gte: filters.minAmount }
-        : {}),
-      ...(typeof filters.maxAmount === "number"
-        ? { lte: filters.maxAmount }
-        : {}),
-    };
-  }
-
   return prisma.expense.findMany({
-    where,
-    orderBy: { date: "desc" },
+    where: buildExpenseWhere(filters),
+    orderBy: [{ createdAt: "desc" }, { date: "desc" }],
   });
 }
 
@@ -205,6 +311,8 @@ export async function getExpenseById(id: string) {
 }
 
 export async function getSmartInsights() {
+  const categories = await getCategories();
+
   const now = new Date();
   const startCurrent = startOfMonth(now);
   const endCurrent = endOfMonth(now);
@@ -228,7 +336,7 @@ export async function getSmartInsights() {
 
   const insights: string[] = [];
 
-  for (const category of EXPENSE_CATEGORIES) {
+  for (const category of categories.map((item) => item.name)) {
     const currentTotal = current
       .filter((item) => item.category === category)
       .reduce((sum, item) => sum + item.amount, 0);

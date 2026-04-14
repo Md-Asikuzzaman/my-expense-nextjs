@@ -4,6 +4,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import prisma from "@/lib/prisma";
+import { normalizeHexColor } from "@/lib/categories";
 import {
   createSession,
   clearSession,
@@ -47,7 +48,7 @@ export async function createExpenseAction(input: {
   title: string;
   amount: number;
   type: "INCOME" | "EXPENSE";
-  category: "Food" | "Transport" | "Shopping" | "Bills" | "Others";
+  category: string;
   note?: string;
   date: string;
   isRecurring: boolean;
@@ -64,6 +65,18 @@ export async function createExpenseAction(input: {
   }
 
   const value = parsed.data;
+  const categoryExists = await prisma.category.findUnique({
+    where: { name: value.category },
+    select: { id: true },
+  });
+
+  if (!categoryExists) {
+    return {
+      ok: false,
+      message: "Please select a valid category.",
+    };
+  }
+
   const date = new Date(value.date);
 
   await prisma.expense.create({
@@ -92,7 +105,7 @@ export async function updateExpenseAction(
     title: string;
     amount: number;
     type: "INCOME" | "EXPENSE";
-    category: "Food" | "Transport" | "Shopping" | "Bills" | "Others";
+    category: string;
     note?: string;
     date: string;
     isRecurring: boolean;
@@ -110,6 +123,18 @@ export async function updateExpenseAction(
   }
 
   const value = parsed.data;
+  const categoryExists = await prisma.category.findUnique({
+    where: { name: value.category },
+    select: { id: true },
+  });
+
+  if (!categoryExists) {
+    return {
+      ok: false,
+      message: "Please select a valid category.",
+    };
+  }
+
   const date = new Date(value.date);
 
   await prisma.expense.update({
@@ -144,7 +169,7 @@ export async function deleteExpenseAction(id: string) {
 }
 
 export async function upsertBudgetAction(input: {
-  category: "Food" | "Transport" | "Shopping" | "Bills" | "Others";
+  category: string;
   limit: number;
   month: number;
   year: number;
@@ -160,6 +185,18 @@ export async function upsertBudgetAction(input: {
   }
 
   const value = parsed.data;
+  const categoryExists = await prisma.category.findUnique({
+    where: { name: value.category },
+    select: { id: true },
+  });
+
+  if (!categoryExists) {
+    return {
+      ok: false,
+      message: "Please select a valid category.",
+    };
+  }
+
   const existing = await prisma.budget.findFirst({
     where: {
       category: value.category,
@@ -195,6 +232,142 @@ export async function deleteBudgetAction(id: string) {
   await prisma.budget.delete({ where: { id } });
   updateTag("budgets");
   updateTag("dashboard");
+  return { ok: true };
+}
+
+export async function createCategoryAction(input: {
+  name: string;
+  color: string;
+}) {
+  await requireAuth();
+
+  const name = input.name.trim();
+  const color = normalizeHexColor(input.color);
+
+  if (!name || name.length > 40) {
+    return {
+      ok: false,
+      message: "Category name must be between 1 and 40 characters.",
+    };
+  }
+
+  if (!color) {
+    return {
+      ok: false,
+      message: "Color must be a valid hex value (e.g. #2563EB).",
+    };
+  }
+
+  const existing = await prisma.category.findUnique({ where: { name } });
+  if (existing) {
+    return { ok: false, message: "Category already exists." };
+  }
+
+  await prisma.category.create({
+    data: { name, color },
+  });
+
+  updateTag("categories");
+  updateTag("analytics");
+  updateTag("dashboard");
+  return { ok: true };
+}
+
+export async function updateCategoryAction(
+  id: string,
+  input: {
+    name: string;
+    color: string;
+  },
+) {
+  await requireAuth();
+
+  const name = input.name.trim();
+  const color = normalizeHexColor(input.color);
+
+  if (!name || name.length > 40) {
+    return {
+      ok: false,
+      message: "Category name must be between 1 and 40 characters.",
+    };
+  }
+
+  if (!color) {
+    return {
+      ok: false,
+      message: "Color must be a valid hex value (e.g. #2563EB).",
+    };
+  }
+
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) {
+    return { ok: false, message: "Category not found." };
+  }
+
+  const duplicate = await prisma.category.findFirst({
+    where: {
+      name,
+      id: { not: id },
+    },
+  });
+
+  if (duplicate) {
+    return { ok: false, message: "Category name already exists." };
+  }
+
+  await prisma.category.update({
+    where: { id },
+    data: { name, color },
+  });
+
+  if (category.name !== name) {
+    await Promise.all([
+      prisma.expense.updateMany({
+        where: { category: category.name },
+        data: { category: name },
+      }),
+      prisma.budget.updateMany({
+        where: { category: category.name },
+        data: { category: name },
+      }),
+    ]);
+  }
+
+  updateTag("categories");
+  updateTag("analytics");
+  updateTag("dashboard");
+  updateTag("expenses");
+  updateTag("budgets");
+  return { ok: true };
+}
+
+export async function deleteCategoryAction(id: string) {
+  await requireAuth();
+
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) {
+    return { ok: false, message: "Category not found." };
+  }
+
+  const [expenseCount, budgetCount] = await Promise.all([
+    prisma.expense.count({ where: { category: category.name } }),
+    prisma.budget.count({ where: { category: category.name } }),
+  ]);
+
+  if (expenseCount > 0 || budgetCount > 0) {
+    return {
+      ok: false,
+      message:
+        "Category is in use by existing expenses or budgets and cannot be deleted.",
+    };
+  }
+
+  await prisma.category.delete({ where: { id } });
+
+  updateTag("categories");
+  updateTag("analytics");
+  updateTag("dashboard");
+  updateTag("budgets");
   return { ok: true };
 }
 

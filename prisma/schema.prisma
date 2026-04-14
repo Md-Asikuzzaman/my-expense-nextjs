@@ -51,3 +51,13 @@ model Budget {
   @@index([month, year, category])
   @@map("budgets")
 }
+
+model Category {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}

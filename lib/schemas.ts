@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  EXPENSE_CATEGORIES,
-  EXPENSE_TYPES,
-  RECURRENCE_TYPES,
-} from "@/lib/constants";
+import { EXPENSE_TYPES, RECURRENCE_TYPES } from "@/lib/constants";
 
 export const loginSchema = z.object({
   email: z.email("Please provide a valid email address."),
@@ -15,7 +11,11 @@ export const expenseFormSchema = z
     title: z.string().min(2, "Title is required."),
     amount: z.coerce.number().positive("Amount must be greater than zero."),
     type: z.enum(EXPENSE_TYPES),
-    category: z.enum(EXPENSE_CATEGORIES),
+    category: z
+      .string()
+      .trim()
+      .min(1, "Category is required.")
+      .max(40, "Category name is too long."),
     note: z.string().max(240).optional().or(z.literal("")),
     date: z.string().min(1, "Date is required."),
     isRecurring: z.boolean().default(false),
@@ -32,7 +32,11 @@ export const expenseFormSchema = z
   });
 
 export const budgetFormSchema = z.object({
-  category: z.enum(EXPENSE_CATEGORIES),
+  category: z
+    .string()
+    .trim()
+    .min(1, "Category is required.")
+    .max(40, "Category name is too long."),
   limit: z.coerce.number().positive("Budget must be greater than zero."),
   month: z.coerce.number().int().min(1).max(12),
   year: z.coerce.number().int().min(2020).max(2100),
@@ -41,7 +45,7 @@ export const budgetFormSchema = z.object({
 export const filterSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  category: z.enum(EXPENSE_CATEGORIES).optional(),
+  category: z.string().trim().min(1).optional(),
   type: z.enum(EXPENSE_TYPES).optional(),
   minAmount: z.coerce.number().optional(),
   maxAmount: z.coerce.number().optional(),

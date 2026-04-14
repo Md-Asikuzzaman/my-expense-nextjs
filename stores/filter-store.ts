@@ -8,6 +8,6 @@ type FilterState = {
 };
 
 export const useFilterStore = create<FilterState>((set) => ({
-  isCollapsed: false,
+  isCollapsed: true,
   setCollapsed: (isCollapsed) => set({ isCollapsed }),
 }));

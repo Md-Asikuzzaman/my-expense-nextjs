@@ -32,12 +32,7 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
   const saveEdit = (budget: BudgetItem) => {
     startTransition(async () => {
       const result = await upsertBudgetAction({
-        category: budget.category as
-          | "Food"
-          | "Transport"
-          | "Shopping"
-          | "Bills"
-          | "Others",
+        category: budget.category,
         limit: Number(editedLimit),
         month: budget.month,
         year: budget.year,

@@ -15,7 +15,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "PulseLedger",
+  title: "Ninja-Expense",
   description: "SaaS-grade expense tracker with analytics and automation.",
 };
 
