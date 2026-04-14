@@ -44,6 +44,10 @@ export function ChartsSection({
   monthlyCategoryTrend: TrendRow[];
   categoryColors?: Record<string, string>;
 }) {
+  const trendKeys = Object.keys(monthlyCategoryTrend[0] ?? {}).filter(
+    (key) => key !== "month",
+  );
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <motion.div
@@ -122,48 +126,56 @@ export function ChartsSection({
               Spending over recent months
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-56 sm:h-64 lg:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={monthlyCategoryTrend}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(99,102,241,0.08)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={8}
-                />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
-                  width={50}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  }}
-                  formatter={(value) => [`$${Number(value).toFixed(2)}`, ""]}
-                />
-                <Legend
-                  verticalAlign="top"
-                  height={20}
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: "11px", paddingBottom: "8px" }}
-                />
-                {Object.keys(monthlyCategoryTrend[0] ?? {})
-                  .filter((key) => key !== "month")
-                  .map((key, index) => (
+          <CardContent className="h-56 sm:h-64 lg:h-72 flex flex-col gap-3">
+            <div className="max-h-16 overflow-y-auto pr-1">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] leading-none">
+                {trendKeys.map((key, index) => (
+                  <div key={key} className="inline-flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{
+                        backgroundColor: resolveColor(key, index, categoryColors),
+                      }}
+                    />
+                    <span className="text-muted-foreground">{key}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyCategoryTrend}
+                  margin={{ top: 6, right: 10, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(99,102,241,0.08)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={8}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${value}`}
+                    width={50}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    }}
+                    formatter={(value) => [`$${Number(value).toFixed(2)}`, ""]}
+                  />
+                  {trendKeys.map((key, index) => (
                     <Bar
                       key={key}
                       dataKey={key}
@@ -172,8 +184,9 @@ export function ChartsSection({
                       maxBarSize={40}
                     />
                   ))}
-              </BarChart>
-            </ResponsiveContainer>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
