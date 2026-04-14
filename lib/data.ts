@@ -223,6 +223,15 @@ export async function getAnalytics() {
     },
   });
 
+  const financeRecords = await prisma.expense.findMany({
+    where: {
+      date: {
+        gte: startOfMonth(subMonths(now, 5)),
+        lte: endOfMonth(now),
+      },
+    },
+  });
+
   const categoryTotals = categoryNames.map((category) => ({
     category,
     value: records
@@ -250,6 +259,30 @@ export async function getAnalytics() {
     );
   });
 
+  const monthlyFinanceTrend = months.map((monthDate) => {
+    const key = format(monthDate, "MMM");
+    const start = startOfMonth(monthDate);
+    const end = endOfMonth(monthDate);
+
+    const monthRecords = financeRecords.filter(
+      (item) => item.date >= start && item.date <= end,
+    );
+
+    const income = monthRecords
+      .filter((item) => item.type === "INCOME")
+      .reduce((sum, item) => sum + item.amount, 0);
+    const expense = monthRecords
+      .filter((item) => item.type === "EXPENSE")
+      .reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      month: key,
+      income,
+      expense,
+      net: income - expense,
+    };
+  });
+
   const sorted = [...categoryTotals].sort((a, b) => b.value - a.value);
 
   const categoryColors = Object.fromEntries(
@@ -262,6 +295,7 @@ export async function getAnalytics() {
   return {
     categoryTotals,
     monthlyCategoryTrend,
+    monthlyFinanceTrend,
     categoryColors,
     topCategory: sorted.find((item) => item.value > 0)?.category ?? "None",
     leastCategory:

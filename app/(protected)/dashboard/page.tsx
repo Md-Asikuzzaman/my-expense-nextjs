@@ -266,6 +266,7 @@ async function AnalyticsSection() {
     <ChartsSection
       categoryTotals={analytics.categoryTotals}
       monthlyCategoryTrend={analytics.monthlyCategoryTrend}
+      monthlyFinanceTrend={analytics.monthlyFinanceTrend}
       categoryColors={analytics.categoryColors}
     />
   );

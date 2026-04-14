@@ -25,11 +25,19 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getFallbackCategoryColor } from "@/lib/categories";
 import { formatCurrency } from "@/lib/format";
 
 type CategoryTotal = { category: string; value: number };
 type TrendRow = Record<string, string | number>;
+type FinanceTrendRow = {
+  month: string;
+  income: number;
+  expense: number;
+  net: number;
+};
+type FinanceView = "expense" | "income-vs-expense" | "net-cashflow";
 type DonutDatum = {
   name: string;
   value: number;
@@ -98,16 +106,19 @@ function buildMonthlyTotals(monthlyCategoryTrend: TrendRow[]) {
 export function ChartsSection({
   categoryTotals,
   monthlyCategoryTrend,
+  monthlyFinanceTrend,
   categoryColors,
 }: {
   categoryTotals: CategoryTotal[];
   monthlyCategoryTrend: TrendRow[];
+  monthlyFinanceTrend?: FinanceTrendRow[];
   categoryColors?: Record<string, string>;
 }) {
   const [activeDonutIndex, setActiveDonutIndex] = useState<number | null>(null);
   const [activeComparisonIndex, setActiveComparisonIndex] = useState<
     number | null
   >(null);
+  const [financeView, setFinanceView] = useState<FinanceView>("expense");
 
   const donutData = useMemo(
     () => buildDonutData(categoryTotals, categoryColors),
@@ -119,18 +130,44 @@ export function ChartsSection({
     [monthlyCategoryTrend],
   );
 
+  const financeTrend = useMemo(() => {
+    if (monthlyFinanceTrend?.length) {
+      return monthlyFinanceTrend.slice(-6);
+    }
+
+    return monthlyTotals.map((item) => ({
+      month: item.month,
+      income: 0,
+      expense: item.total,
+      net: -item.total,
+    }));
+  }, [monthlyFinanceTrend, monthlyTotals]);
+
   const comparisonData = useMemo(
     () => [...categoryTotals].sort((a, b) => b.value - a.value),
     [categoryTotals],
   );
 
   const trendDelta = useMemo(() => {
-    if (monthlyTotals.length < 2) {
+    if (financeTrend.length < 2) {
       return { amount: 0, percent: 0, isUp: false };
     }
 
-    const current = monthlyTotals[monthlyTotals.length - 1]?.total ?? 0;
-    const previous = monthlyTotals[monthlyTotals.length - 2]?.total ?? 0;
+    const currentPoint = financeTrend[financeTrend.length - 1];
+    const previousPoint = financeTrend[financeTrend.length - 2];
+
+    const current =
+      financeView === "expense"
+        ? currentPoint?.expense ?? 0
+        : financeView === "income-vs-expense"
+          ? (currentPoint?.income ?? 0) - (currentPoint?.expense ?? 0)
+          : currentPoint?.net ?? 0;
+    const previous =
+      financeView === "expense"
+        ? previousPoint?.expense ?? 0
+        : financeView === "income-vs-expense"
+          ? (previousPoint?.income ?? 0) - (previousPoint?.expense ?? 0)
+          : previousPoint?.net ?? 0;
     const amount = current - previous;
     const percent = previous === 0 ? 0 : (amount / previous) * 100;
 
@@ -139,17 +176,18 @@ export function ChartsSection({
       percent,
       isUp: amount >= 0,
     };
-  }, [monthlyTotals]);
+  }, [financeTrend, financeView]);
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <motion.div
+          className="h-full"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <Card className="w-full overflow-hidden">
+          <Card className="w-full h-120 sm:h-128 lg:h-136 overflow-hidden flex flex-col">
             <CardHeader className="pb-2">
               <CardTitle className="text-base sm:text-lg">
                 Expense Distribution
@@ -158,7 +196,7 @@ export function ChartsSection({
                 Top categories with small spend grouped into Others
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-56 sm:h-64 lg:h-72 flex flex-col gap-3">
+            <CardContent className="flex-1 min-h-0 flex flex-col gap-3">
               <div className="flex-1 min-h-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -191,10 +229,10 @@ export function ChartsSection({
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number, _name, item) => {
+                      formatter={(value, _name, item) => {
                         const payload = item.payload as DonutDatum;
                         return [
-                          `${formatCurrency(Number(value))} (${payload.percent.toFixed(1)}%)`,
+                          `${formatCurrency(Number(value ?? 0))} (${payload.percent.toFixed(1)}%)`,
                           payload.name,
                         ];
                       }}
@@ -244,17 +282,43 @@ export function ChartsSection({
         </motion.div>
 
         <motion.div
+          className="h-full"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
         >
-          <Card className="w-full overflow-hidden">
+          <Card className="w-full h-120 sm:h-128 lg:h-136 overflow-hidden flex flex-col">
             <CardHeader className="pb-2">
               <CardTitle className="text-base sm:text-lg">
                 Monthly Trends
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+              <CardDescription className="text-xs sm:text-sm flex flex-col gap-2">
                 <span>Spending over recent months</span>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={financeView === "expense" ? "default" : "outline"}
+                    onClick={() => setFinanceView("expense")}
+                  >
+                    Expense only
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={
+                      financeView === "income-vs-expense" ? "default" : "outline"
+                    }
+                    onClick={() => setFinanceView("income-vs-expense")}
+                  >
+                    Income vs expense
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={financeView === "net-cashflow" ? "default" : "outline"}
+                    onClick={() => setFinanceView("net-cashflow")}
+                  >
+                    Net Cashflow
+                  </Button>
+                </div>
                 <span
                   className={trendDelta.isUp ? "text-rose-500" : "text-emerald-500"}
                 >
@@ -262,16 +326,20 @@ export function ChartsSection({
                 </span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-56 sm:h-64 lg:h-72">
+            <CardContent className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={monthlyTotals}
+                  data={financeTrend}
                   margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.45} />
                       <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="netFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.45} />
+                      <stop offset="95%" stopColor="#14B8A6" stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -294,7 +362,10 @@ export function ChartsSection({
                     width={70}
                   />
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(Number(value)), "Total"]}
+                    formatter={(value, name) => [
+                      formatCurrency(Number(value ?? 0)),
+                      String(name),
+                    ]}
                     contentStyle={{
                       borderRadius: "12px",
                       border: "1px solid rgba(148,163,184,0.2)",
@@ -303,16 +374,62 @@ export function ChartsSection({
                       color: "#E2E8F0",
                     }}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#3B82F6"
-                    strokeWidth={2.5}
-                    fill="url(#trendFill)"
-                    activeDot={{ r: 6, stroke: "#3B82F6", strokeWidth: 2, fill: "#fff" }}
-                    isAnimationActive
-                    animationDuration={700}
-                  />
+                  {(financeView === "expense" ||
+                    financeView === "income-vs-expense") && (
+                    <Area
+                      type="monotone"
+                      dataKey="expense"
+                      stroke="#3B82F6"
+                      strokeWidth={2.5}
+                      fill="url(#trendFill)"
+                      name="Expense"
+                      activeDot={{
+                        r: 6,
+                        stroke: "#3B82F6",
+                        strokeWidth: 2,
+                        fill: "#fff",
+                      }}
+                      isAnimationActive
+                      animationDuration={700}
+                    />
+                  )}
+                  {financeView === "income-vs-expense" && (
+                    <Area
+                      type="monotone"
+                      dataKey="income"
+                      stroke="#22C55E"
+                      strokeDasharray="6 4"
+                      strokeWidth={2.2}
+                      fillOpacity={0}
+                      name="Income"
+                      activeDot={{
+                        r: 6,
+                        stroke: "#22C55E",
+                        strokeWidth: 2,
+                        fill: "#fff",
+                      }}
+                      isAnimationActive
+                      animationDuration={700}
+                    />
+                  )}
+                  {financeView === "net-cashflow" && (
+                    <Area
+                      type="monotone"
+                      dataKey="net"
+                      stroke="#14B8A6"
+                      strokeWidth={2.5}
+                      fill="url(#netFill)"
+                      name="Net Cashflow"
+                      activeDot={{
+                        r: 6,
+                        stroke: "#14B8A6",
+                        strokeWidth: 2,
+                        fill: "#fff",
+                      }}
+                      isAnimationActive
+                      animationDuration={700}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -363,7 +480,7 @@ export function ChartsSection({
                   axisLine={false}
                 />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(Number(value)), "Amount"]}
+                  formatter={(value) => [formatCurrency(Number(value ?? 0)), "Amount"]}
                   contentStyle={{
                     borderRadius: "12px",
                     border: "1px solid rgba(148,163,184,0.2)",
@@ -391,7 +508,7 @@ export function ChartsSection({
                   <LabelList
                     dataKey="value"
                     position="right"
-                    formatter={(value: number) => formatCurrency(Number(value))}
+                    formatter={(value) => formatCurrency(Number(value ?? 0))}
                     fill="var(--color-foreground)"
                     fontSize={11}
                   />
