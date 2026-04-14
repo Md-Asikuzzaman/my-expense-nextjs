@@ -74,7 +74,7 @@ export function BudgetForm({
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
       {/* Category & Amount */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <Controller
           name="category"
           control={form.control}
