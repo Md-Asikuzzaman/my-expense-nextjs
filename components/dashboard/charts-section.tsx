@@ -158,16 +158,16 @@ export function ChartsSection({
 
     const current =
       financeView === "expense"
-        ? currentPoint?.expense ?? 0
+        ? (currentPoint?.expense ?? 0)
         : financeView === "income-vs-expense"
           ? (currentPoint?.income ?? 0) - (currentPoint?.expense ?? 0)
-          : currentPoint?.net ?? 0;
+          : (currentPoint?.net ?? 0);
     const previous =
       financeView === "expense"
-        ? previousPoint?.expense ?? 0
+        ? (previousPoint?.expense ?? 0)
         : financeView === "income-vs-expense"
           ? (previousPoint?.income ?? 0) - (previousPoint?.expense ?? 0)
-          : previousPoint?.net ?? 0;
+          : (previousPoint?.net ?? 0);
     const amount = current - previous;
     const percent = previous === 0 ? 0 : (amount / previous) * 100;
 
@@ -218,11 +218,14 @@ export function ChartsSection({
                           key={entry.name}
                           fill={entry.color}
                           fillOpacity={
-                            activeDonutIndex === null || activeDonutIndex === index
+                            activeDonutIndex === null ||
+                            activeDonutIndex === index
                               ? 1
                               : 0.28
                           }
-                          stroke={activeDonutIndex === index ? "#FFFFFF" : "none"}
+                          stroke={
+                            activeDonutIndex === index ? "#FFFFFF" : "none"
+                          }
                           strokeWidth={activeDonutIndex === index ? 2 : 0}
                           onMouseEnter={() => setActiveDonutIndex(index)}
                         />
@@ -266,12 +269,14 @@ export function ChartsSection({
                       </div>
                       <span
                         className={
-                          activeDonutIndex === null || activeDonutIndex === index
+                          activeDonutIndex === null ||
+                          activeDonutIndex === index
                             ? "font-medium"
                             : "font-medium opacity-50"
                         }
                       >
-                        {formatCurrency(item.value)} ({item.percent.toFixed(1)}%)
+                        {formatCurrency(item.value)} ({item.percent.toFixed(1)}
+                        %)
                       </span>
                     </div>
                   ))}
@@ -305,7 +310,9 @@ export function ChartsSection({
                   <Button
                     size="sm"
                     variant={
-                      financeView === "income-vs-expense" ? "default" : "outline"
+                      financeView === "income-vs-expense"
+                        ? "default"
+                        : "outline"
                     }
                     onClick={() => setFinanceView("income-vs-expense")}
                   >
@@ -313,16 +320,22 @@ export function ChartsSection({
                   </Button>
                   <Button
                     size="sm"
-                    variant={financeView === "net-cashflow" ? "default" : "outline"}
+                    variant={
+                      financeView === "net-cashflow" ? "default" : "outline"
+                    }
                     onClick={() => setFinanceView("net-cashflow")}
                   >
                     Net Cashflow
                   </Button>
                 </div>
                 <span
-                  className={trendDelta.isUp ? "text-rose-500" : "text-emerald-500"}
+                  className={
+                    trendDelta.isUp ? "text-rose-500" : "text-emerald-500"
+                  }
                 >
-                  {trendDelta.isUp ? "Up" : "Down"} {formatCurrency(Math.abs(trendDelta.amount))} ({Math.abs(trendDelta.percent).toFixed(1)}%)
+                  {trendDelta.isUp ? "Up" : "Down"}{" "}
+                  {formatCurrency(Math.abs(trendDelta.amount))} (
+                  {Math.abs(trendDelta.percent).toFixed(1)}%)
                 </span>
               </CardDescription>
             </CardHeader>
@@ -334,12 +347,28 @@ export function ChartsSection({
                 >
                   <defs>
                     <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
+                      <stop
+                        offset="5%"
+                        stopColor="#3B82F6"
+                        stopOpacity={0.45}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="#3B82F6"
+                        stopOpacity={0.05}
+                      />
                     </linearGradient>
                     <linearGradient id="netFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="#14B8A6" stopOpacity={0.05} />
+                      <stop
+                        offset="5%"
+                        stopColor="#14B8A6"
+                        stopOpacity={0.45}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="#14B8A6"
+                        stopOpacity={0.05}
+                      />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -480,7 +509,10 @@ export function ChartsSection({
                   axisLine={false}
                 />
                 <Tooltip
-                  formatter={(value) => [formatCurrency(Number(value ?? 0)), "Amount"]}
+                  formatter={(value) => [
+                    formatCurrency(Number(value ?? 0)),
+                    "Amount",
+                  ]}
                   contentStyle={{
                     borderRadius: "12px",
                     border: "1px solid rgba(148,163,184,0.2)",
