@@ -31,8 +31,8 @@ export function BudgetProgress({
     <Card className='w-full overflow-hidden'>
       <CardHeader className='pb-3'>
         <CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
-          <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/30'>
-            <Target className='size-4 text-violet-500' />
+          <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30'>
+            <Target className='size-4 text-emerald-600' />
           </div>
           Budget Progress
         </CardTitle>
@@ -74,17 +74,17 @@ export function BudgetProgress({
                       {formatCurrency(spent)} / {formatCurrency(budget.limit)}
                     </span>
                   </div>
-                  <div className='relative'>
-                    <Progress
-                      value={pct}
-                      className={cn(
-                        'h-2.5 sm:h-3',
-                        alert === 'danger' && '[&>div]:bg-rose-500',
-                        alert === 'warn' && '[&>div]:bg-amber-500',
-                        alert === 'safe' && '[&>div]:bg-emerald-500',
-                      )}
-                    />
-                  </div>
+                  <Progress
+                    value={pct}
+                    className={cn(
+                      // Track background colors
+                      alert === 'danger' && '[&_[data-slot=progress-track]]:bg-rose-200 dark:[&_[data-slot=progress-track]]:bg-rose-900/60',
+                      alert === 'warn' && '[&_[data-slot=progress-track]]:bg-amber-200 dark:[&_[data-slot=progress-track]]:bg-amber-900/60',
+                      // Indicator colors
+                      alert === 'danger' && '[&_[data-slot=progress-indicator]]:bg-rose-500',
+                      alert === 'warn' && '[&_[data-slot=progress-indicator]]:bg-amber-500',
+                    )}
+                  />
                   <div className='flex items-center justify-between'>
                     {alert !== 'safe' ? (
                       <p

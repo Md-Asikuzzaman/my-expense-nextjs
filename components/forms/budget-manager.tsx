@@ -9,6 +9,7 @@ import { deleteBudgetAction, upsertBudgetAction } from "@/app/actions";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type BudgetItem = {
   id: string;
@@ -76,64 +77,72 @@ export function BudgetManager({ budgets }: { budgets: BudgetItem[] }) {
         return (
           <div
             key={budget.id}
-            className="flex flex-col gap-3 rounded-lg border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+            className={cn(
+              "flex flex-col gap-3 rounded-lg border p-3 transition-colors sm:flex-row sm:items-start sm:justify-between",
+              isEditing
+                ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                : "border-border/70 hover:border-border"
+            )}
           >
-            <div>
+            <div className="flex items-center h-8">
               <p className="text-sm font-medium">{budget.category}</p>
-              {!isEditing && (
-                <p className="text-xs text-muted-foreground">
-                  Limit: {formatCurrency(budget.limit)}
-                </p>
-              )}
             </div>
 
-            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <div className="flex w-full flex-col gap-2 sm:w-auto">
               {isEditing ? (
-                <>
-                  <Input
-                    className="h-9 w-full sm:w-28"
-                    type="number"
-                    step="0.01"
-                    value={editedLimit}
-                    onChange={(event) => setEditedLimit(event.target.value)}
-                  />
-                  <Button
-                    size="sm"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => saveEdit(budget)}
-                    disabled={isPending}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => setEditingId(null)}
-                  >
-                    Cancel
-                  </Button>
-                </>
+                <div className="flex w-full flex-col gap-2 sm:min-w-[200px]">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                    <Input
+                      className="h-8 pl-6 text-sm w-full"
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={editedLimit}
+                      onChange={(event) => setEditedLimit(event.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEdit(budget)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      size="sm"
+                      className="h-8 px-4 text-xs"
+                      onClick={() => saveEdit(budget)}
+                      disabled={isPending}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setEditingId(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <>
+                <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 sm:flex-none"
+                    className="h-9 px-3"
                     onClick={() => startEdit(budget)}
                   >
-                    <Pencil className="size-3" />
+                    <Pencil className="size-3.5" />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="flex-1 sm:flex-none"
+                    className="h-9 px-3"
                     onClick={() => removeBudget(budget.id)}
                     disabled={isPending}
                   >
-                    <Trash2 className="size-3" />
+                    <Trash2 className="size-3.5" />
                   </Button>
-                </>
+                </div>
               )}
             </div>
           </div>
