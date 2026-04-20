@@ -1,9 +1,10 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
+/* Spider-Tech Design System Theme */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -46,97 +47,148 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Spider-Tech Custom Colors */
+  --color-spider-red: #dc2626;
+  --color-dark-red: #991b1b;
+  --color-electric-cyan: #0891b2;
+  --color-dark-cyan: #0e7490;
+  --color-dark-bg: #0f0f1e;
+  --color-card-surface: #1a1a2e;
 }
 
 :root {
-  --background: oklch(0.99 0.01 280);
-  --foreground: oklch(0.22 0.03 275);
-  --card: oklch(1 0.01 285 / 92%);
-  --card-foreground: oklch(0.2 0.03 275);
-  --popover: oklch(1 0.01 285 / 97%);
-  --popover-foreground: oklch(0.2 0.03 275);
-  --primary: oklch(0.58 0.22 286);
-  --primary-foreground: oklch(0.98 0.01 280);
-  --secondary: oklch(0.95 0.02 280);
-  --secondary-foreground: oklch(0.25 0.03 275);
-  --muted: oklch(0.96 0.015 280);
-  --muted-foreground: oklch(0.47 0.03 275);
-  --accent: oklch(0.93 0.03 285);
-  --accent-foreground: oklch(0.26 0.03 275);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.02 280);
-  --input: oklch(0.92 0.02 280);
-  --ring: oklch(0.58 0.2 286);
-  --chart-1: #6366f1;
-  --chart-2: #10b981;
-  --chart-3: #f43f5e;
-  --chart-4: #f59e0b;
-  --chart-5: #0ea5e9;
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Light Mode - Spider-Tech Premium */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  /* Spider Red as Primary */
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  /* Electric Cyan as Accent */
+  --accent: #0891b2;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  /* Spider Red focus ring */
+  --ring: #dc2626;
+  /* Spider-Tech Chart Colors */
+  --chart-1: #dc2626;
+  --chart-2: #0891b2;
+  --chart-3: #991b1b;
+  --chart-4: #0e7490;
+  --chart-5: #f59e0b;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #dc2626;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #1e293b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #dc2626;
 }
 
 .dark {
-  --background: oklch(0.19 0.02 275);
-  --foreground: oklch(0.96 0.01 280);
-  --card: oklch(0.25 0.03 278 / 88%);
-  --card-foreground: oklch(0.95 0.01 280);
-  --popover: oklch(0.22 0.03 278 / 95%);
-  --popover-foreground: oklch(0.95 0.01 280);
-  --primary: oklch(0.66 0.22 286);
-  --primary-foreground: oklch(0.17 0.02 275);
-  --secondary: oklch(0.3 0.03 275);
-  --secondary-foreground: oklch(0.95 0.01 280);
-  --muted: oklch(0.3 0.03 275);
-  --muted-foreground: oklch(0.76 0.02 278);
-  --accent: oklch(0.34 0.04 280);
-  --accent-foreground: oklch(0.95 0.01 280);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.66 0.2 286);
-  --chart-1: #818cf8;
-  --chart-2: #34d399;
-  --chart-3: #fb7185;
-  --chart-4: #fbbf24;
-  --chart-5: #38bdf8;
-  --sidebar: oklch(0.23 0.03 275);
-  --sidebar-foreground: oklch(0.96 0.01 280);
-  --sidebar-primary: oklch(0.66 0.22 286);
-  --sidebar-primary-foreground: oklch(0.15 0.02 275);
-  --sidebar-accent: oklch(0.3 0.03 275);
-  --sidebar-accent-foreground: oklch(0.96 0.01 280);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.66 0.22 286);
+  /* Dark Mode - Spider-Tech Cinematic */
+  --background: #0f0f1e;
+  --foreground: #f8fafc;
+  --card: #1a1a2e;
+  --card-foreground: #f8fafc;
+  --popover: #1a1a2e;
+  --popover-foreground: #f8fafc;
+  /* Spider Red glow in dark */
+  --primary: #ef4444;
+  --primary-foreground: #ffffff;
+  --secondary: #252545;
+  --secondary-foreground: #e2e8f0;
+  --muted: #252545;
+  --muted-foreground: #94a3b8;
+  /* Electric Cyan accent */
+  --accent: #06b6d4;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  /* Spider Red ring */
+  --ring: #ef4444;
+  /* Spider-Tech Chart Colors - Brighter in dark */
+  --chart-1: #ef4444;
+  --chart-2: #06b6d4;
+  --chart-3: #f87171;
+  --chart-4: #22d3ee;
+  --chart-5: #fbbf24;
+  --radius: 0.75rem;
+  --sidebar: #15152a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #ef4444;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #252545;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #ef4444;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply font-sans;
+  }
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(
-        circle at 12% 16%,
-        color-mix(in oklab, var(--primary) 18%, transparent),
-        transparent 32%
-      ),
-      radial-gradient(
-        circle at 82% 78%,
-        color-mix(in oklab, #10b981 14%, transparent),
-        transparent 30%
-      );
+      /* Spider web texture - ultra subtle */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23DC2626' stroke-width='0.5' opacity='0.03'%3E%3Cpath d='M50 0 L50 100 M0 50 L100 50 M15 15 L85 85 M85 15 L15 85'/%3E%3Ccircle cx='50' cy='50' r='20'/%3E%3Ccircle cx='50' cy='50' r='35'/%3E%3C/g%3E%3C/svg%3E"),
+      /* Red glow - top right */
+        radial-gradient(
+          ellipse 60% 50% at 85% 15%,
+          rgba(220, 38, 38, 0.15) 0%,
+          transparent 50%
+        ),
+      /* Cyan glow - bottom left */
+        radial-gradient(
+          ellipse 60% 50% at 15% 85%,
+          rgba(8, 145, 178, 0.12) 0%,
+          transparent 50%
+        );
     background-attachment: fixed;
   }
-  html {
-    @apply font-sans;
+
+  /* Mobile: reduce blur intensity by 50% */
+  @media (max-width: 768px) {
+    body {
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23DC2626' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M50 0 L50 100 M0 50 L100 50'/%3E%3C/g%3E%3C/svg%3E"),
+        radial-gradient(
+          ellipse 60% 50% at 85% 15%,
+          rgba(220, 38, 38, 0.08) 0%,
+          transparent 50%
+        ),
+        radial-gradient(
+          ellipse 60% 50% at 15% 85%,
+          rgba(8, 145, 178, 0.06) 0%,
+          transparent 50%
+        );
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
