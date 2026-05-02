@@ -435,7 +435,7 @@ export function ChartsSection({
                         r: 6,
                         stroke: "#22C55E",
                         strokeWidth: 2,
-                        fill: "#fff",
+                        fill: "#ffffff",
                       }}
                       isAnimationActive
                       animationDuration={700}
