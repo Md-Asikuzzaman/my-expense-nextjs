@@ -57,8 +57,17 @@ function buildDonutData(
   categoryTotals: CategoryTotal[],
   categoryColors?: Record<string, string>,
 ) {
-  const sorted = [...categoryTotals]
-    .filter((item) => item.value > 0)
+  // sanitize and merge duplicate/invalid category entries
+  const merged = categoryTotals.reduce<Record<string, number>>((acc, cur) => {
+    const name = String(cur.category ?? "").trim();
+    if (!name) return acc;
+    if ((cur.value ?? 0) <= 0) return acc;
+    acc[name] = (acc[name] ?? 0) + Number(cur.value ?? 0);
+    return acc;
+  }, {});
+
+  const sorted = Object.entries(merged)
+    .map(([category, value]) => ({ category, value }))
     .sort((a, b) => b.value - a.value);
 
   const total = sorted.reduce((sum, item) => sum + item.value, 0);
@@ -66,24 +75,14 @@ function buildDonutData(
     return [] as DonutDatum[];
   }
 
-  const top = sorted.slice(0, 6);
-  const others = sorted.slice(6).reduce((sum, item) => sum + item.value, 0);
-
-  const base = top.map((item, index) => ({
+  // Return categories exactly as they come from the DB (filtered and sorted).
+  // Avoid adding an aggregated "Others" slice so the chart reflects DB data.
+  const base = sorted.map((item, index) => ({
     name: item.category,
     value: item.value,
     color: resolveColor(item.category, index, categoryColors),
     percent: (item.value / total) * 100,
   }));
-
-  if (others > 0) {
-    base.push({
-      name: "Others",
-      value: others,
-      color: "#64748B",
-      percent: (others / total) * 100,
-    });
-  }
 
   return base;
 }
@@ -118,7 +117,7 @@ export function ChartsSection({
   const [activeComparisonIndex, setActiveComparisonIndex] = useState<
     number | null
   >(null);
-  const [financeView, setFinanceView] = useState<FinanceView>("expense");
+  const [financeView, setFinanceView] = useState<FinanceView>("income-vs-expense");
 
   const donutData = useMemo(
     () => buildDonutData(categoryTotals, categoryColors),
@@ -150,7 +149,7 @@ export function ChartsSection({
 
   const trendDelta = useMemo(() => {
     if (financeTrend.length < 2) {
-      return { amount: 0, percent: 0, isUp: false };
+      return { amount: 0, percent: 0, isUp: false, isGood: true };
     }
 
     const currentPoint = financeTrend[financeTrend.length - 1];
@@ -171,10 +170,18 @@ export function ChartsSection({
     const amount = current - previous;
     const percent = previous === 0 ? 0 : (amount / previous) * 100;
 
+    // Movement direction
+    const isUp = amount >= 0;
+    // Define whether this movement is "good" for the user:
+    // - For expense view, a decrease in expense (amount < 0) is good
+    // - For income-vs-expense and net-cashflow, an increase (amount >= 0) is good
+    const isGood = financeView === "expense" ? amount <= 0 : isUp;
+
     return {
       amount,
       percent,
-      isUp: amount >= 0,
+      isUp,
+      isGood,
     };
   }, [financeTrend, financeView]);
 
@@ -302,21 +309,19 @@ export function ChartsSection({
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    variant={financeView === "expense" ? "default" : "outline"}
-                    onClick={() => setFinanceView("expense")}
-                  >
-                    Expense only
-                  </Button>
-                  <Button
-                    size="sm"
                     variant={
-                      financeView === "income-vs-expense"
-                        ? "default"
-                        : "outline"
+                      financeView === "income-vs-expense" ? "default" : "outline"
                     }
                     onClick={() => setFinanceView("income-vs-expense")}
                   >
                     Income vs expense
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={financeView === "expense" ? "default" : "outline"}
+                    onClick={() => setFinanceView("expense")}
+                  >
+                    Expense only
                   </Button>
                   <Button
                     size="sm"
@@ -328,11 +333,7 @@ export function ChartsSection({
                     Net Cashflow
                   </Button>
                 </div>
-                <span
-                  className={
-                    trendDelta.isUp ? "text-rose-500" : "text-emerald-500"
-                  }
-                >
+                <span className={trendDelta.isUp ? "text-emerald-500" : "text-rose-500"}>
                   {trendDelta.isUp ? "Up" : "Down"}{" "}
                   {formatCurrency(Math.abs(trendDelta.amount))} (
                   {Math.abs(trendDelta.percent).toFixed(1)}%)
@@ -346,15 +347,33 @@ export function ChartsSection({
                   margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="expenseFill"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop
                         offset="5%"
-                        stopColor="#3B82F6"
+                        stopColor="#EF4444"
                         stopOpacity={0.45}
                       />
                       <stop
                         offset="95%"
-                        stopColor="#3B82F6"
+                        stopColor="#EF4444"
+                        stopOpacity={0.05}
+                      />
+                    </linearGradient>
+                    <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="#16A34A"
+                        stopOpacity={0.45}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="#16A34A"
                         stopOpacity={0.05}
                       />
                     </linearGradient>
@@ -371,11 +390,7 @@ export function ChartsSection({
                       />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(148,163,184,0.18)"
-                    vertical={false}
-                  />
+                  {/* Minimal grid for clarity removed per design preference */}
                   <XAxis
                     dataKey="month"
                     tick={{ fontSize: 11 }}
@@ -408,13 +423,13 @@ export function ChartsSection({
                     <Area
                       type="monotone"
                       dataKey="expense"
-                      stroke="#3B82F6"
+                      stroke="#EF4444"
                       strokeWidth={2.5}
-                      fill="url(#trendFill)"
+                      fill="url(#expenseFill)"
                       name="Expense"
                       activeDot={{
                         r: 6,
-                        stroke: "#3B82F6",
+                        stroke: "#EF4444",
                         strokeWidth: 2,
                         fill: "#fff",
                       }}
@@ -426,14 +441,13 @@ export function ChartsSection({
                     <Area
                       type="monotone"
                       dataKey="income"
-                      stroke="#22C55E"
-                      strokeDasharray="6 4"
+                      stroke="#16A34A"
                       strokeWidth={2.2}
-                      fillOpacity={0}
+                      fill="url(#incomeFill)"
                       name="Income"
                       activeDot={{
                         r: 6,
-                        stroke: "#22C55E",
+                        stroke: "#16A34A",
                         strokeWidth: 2,
                         fill: "#fff",
                       }}
@@ -488,11 +502,7 @@ export function ChartsSection({
                 margin={{ top: 8, right: 26, left: 24, bottom: 4 }}
                 onMouseLeave={() => setActiveComparisonIndex(null)}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(148,163,184,0.18)"
-                  horizontal={false}
-                />
+                {/* simplified visuals: no chart grid lines */}
                 <XAxis
                   type="number"
                   tick={{ fontSize: 11 }}
